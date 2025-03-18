@@ -1,9 +1,12 @@
-from app import app, db
-from models import Refeicao
-from flask import request, jsonify
+# routes.py
+from flask import Blueprint, request, jsonify
 from datetime import datetime
+from models import Refeicao
+from extensions import db
 
-@app.route('/refeicoes', methods=['POST'])
+bp_refeicoes = Blueprint('refeicoes', __name__, url_prefix='/refeicoes')
+
+@bp_refeicoes.route('', methods=['POST'])
 def criar_refeicao():
     dados = request.get_json()
     try:
@@ -18,8 +21,8 @@ def criar_refeicao():
         return jsonify({'mensagem': 'Refeição criada com sucesso!'}), 201
     except Exception as e:
         return jsonify({'erro': str(e)}), 400
-    
-@app.route('/refeicoes', methods=['GET'])
+
+@bp_refeicoes.route('', methods=['GET'])
 def listar_refeicoes():
     refeicoes = Refeicao.query.all()
     resultado = [{
@@ -31,7 +34,7 @@ def listar_refeicoes():
     } for r in refeicoes]
     return jsonify(resultado), 200
 
-@app.route('/refeicoes/<int:id>', methods=['GET'])
+@bp_refeicoes.route('/<int:id>', methods=['GET'])
 def obter_refeicao(id):
     refeicao = Refeicao.query.get_or_404(id)
     resultado = {
@@ -43,7 +46,7 @@ def obter_refeicao(id):
     }
     return jsonify(resultado), 200
 
-@app.route('/refeicoes/<int:id>', methods=['PUT'])
+@bp_refeicoes.route('/<int:id>', methods=['PUT'])
 def atualizar_refeicao(id):
     refeicao = Refeicao.query.get_or_404(id)
     dados = request.get_json()
@@ -54,15 +57,16 @@ def atualizar_refeicao(id):
             refeicao.data_hora = datetime.fromisoformat(dados['data_hora'])
         if 'dentro_dieta' in dados:
             refeicao.dentro_dieta = dados['dentro_dieta']
-        
         db.session.commit()
         return jsonify({'mensagem': 'Refeição atualizada com sucesso!'}), 200
     except Exception as e:
         return jsonify({'erro': str(e)}), 400
 
-@app.route('/refeicoes/<int:id>', methods=['DELETE'])
+@bp_refeicoes.route('/<int:id>', methods=['DELETE'])
 def deletar_refeicao(id):
     refeicao = Refeicao.query.get_or_404(id)
     db.session.delete(refeicao)
     db.session.commit()
     return jsonify({'mensagem': 'Refeição removida com sucesso!'}), 200
+
+print("Rotas do blueprint registradas!")

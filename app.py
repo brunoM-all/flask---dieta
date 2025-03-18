@@ -1,15 +1,27 @@
+# app.py
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from config import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_TRACK_MODIFICATIONS
+from config import Config
+from extensions import db
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
+app.config.from_object(Config)
 
-db = SQLAlchemy(app)
+# Inicializa o db com a aplicação
+db.init_app(app)
 
-# Importar as rotas
-import routes
+# Importa e registra o blueprint das rotas (faça isso depois de inicializar o db)
+from routes import bp_refeicoes
+app.register_blueprint(bp_refeicoes)
+
+# Rota simples para teste
+@app.route('/teste')
+def teste():
+    return "Teste OK!"
 
 if __name__ == '__main__':
+    with app.app_context():
+        # Opcional: se desejar criar as tabelas automaticamente ao iniciar
+        db.create_all()
+    print("Mapa de URLs:")
+    print(app.url_map)
     app.run(debug=True)
